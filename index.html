@@ -331,12 +331,17 @@ tr.open .det{grid-template-rows:1fr}
 .lockov svg{width:52px;height:auto}
 .lockov b{font:700 24px var(--f-d);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
 .lockov span{font-size:15px;color:var(--ink-2);max-width:30ch}
+.lng{position:fixed;z-index:25;top:calc(env(safe-area-inset-top,0px) + 46px);right:max(16px,calc(env(safe-area-inset-right,0px) + 16px));display:flex;border:1.5px solid var(--line);background:var(--paper-3)}
+.lng button{all:unset;cursor:pointer;font:500 12px var(--f-m);letter-spacing:.1em;padding:7px 11px;color:var(--ink-2)}
+.lng button[aria-pressed="true"]{background:var(--dim);color:var(--dim-ink)}
+.lng button:focus-visible{outline:2px dashed var(--dim);outline-offset:2px}
 </style>
 
 </head>
 <body>
 <div class="ruler" aria-hidden="true"><div class="ticks"></div><div class="nums" id="nums"></div><div class="cur" id="cur" data-v="x = 0 mm"></div></div>
 
+<div class="lng" role="group" aria-label="Langue / Language"><button type="button" data-l="fr" aria-pressed="true">FR</button><button type="button" data-l="en" aria-pressed="false">EN</button></div>
 <div class="sheet">
  <div class="zones" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
  <div class="zones v" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
@@ -647,7 +652,7 @@ function draw(){
     ctx.strokeStyle='rgba(234,242,255,.5)';ctx.lineWidth=1.5;const a=P(-150,p[1],z+34),b=P(150,p[1],z+34);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
     ctx.fillStyle=INK;ctx.fillRect(q[0]-11,q[1]-34,22,18);ctx.beginPath();ctx.moveTo(q[0]-6,q[1]-16);ctx.lineTo(q[0]+6,q[1]-16);ctx.lineTo(q[0],q[1]-2);ctx.fill();
     ctx.fillStyle=HOT;ctx.beginPath();ctx.arc(q[0],q[1],2.4,0,7);ctx.fill();
-  }else{ctx.fillStyle=DIM;ctx.font=`500 13px 'JetBrains Mono',monospace`;ctx.textAlign='center';ctx.fillText('PIÈCE TERMINÉE · Z '+(NL*0.2).toFixed(1)+' mm',W/2,32+20)}
+  }else{ctx.fillStyle=DIM;ctx.font=`500 13px 'JetBrains Mono',monospace`;ctx.textAlign='center';ctx.fillText((LANG==='en'?'PART COMPLETE · Z ':'PIÈCE TERMINÉE · Z ')+(NL*0.2).toFixed(1)+' mm',W/2,32+20)}
 }
 let tick=0;
 function loop(t){
@@ -702,7 +707,7 @@ if(!reduce){addEventListener('scroll',xpUpd,{passive:true});xpUpd()}
 
 /* ----- copier ----- */
 document.addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;const v=b.dataset.copy;
- const done=()=>{b.textContent='Copié';setTimeout(()=>b.textContent='Copier',1400)};
+ const done=()=>{b.textContent=T('Copié');setTimeout(()=>b.textContent=T('Copier'),1400)};
  try{navigator.clipboard.writeText(v).then(done,()=>{const r=document.createRange();r.selectNodeContents(b.previousElementSibling);getSelection().removeAllRanges();getSelection().addRange(r)})}catch(x){}});
 
 /* ----- modèles 3D : rotation libre ----- */
@@ -730,6 +735,58 @@ function viewer(el){
 }
 const vio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){vio.unobserve(e.target);viewer(e.target)}}),{rootMargin:'200px'});
 document.querySelectorAll('.v3d').forEach(v=>vio.observe(v));
+/* ----- langue FR / EN ----- */
+const EN={
+"Planche n° 1 · Portfolio":"Sheet no. 1 · Portfolio","Dessinateur industriel":"Industrial Draftsman",
+"Quatre ans d’usinage et de réglage sur tours CNC Citizen, puis une formation de dessinateur industriel sur SolidWorks et AutoCAD. Je dessine des pièces en sachant comment elles seront fabriquées et contrôlées.":"Four years machining and setting up Citizen CNC lathes, then industrial drafting training in SolidWorks and AutoCAD. I design parts knowing how they will be manufactured and inspected.",
+"Voir mon parcours ↓":"See my career ↓","Mes réalisations":"My projects","Me contacter":"Contact me","↖ passez la souris sur le plan":"↖ hover over the drawing",
+"VUE DE FACE":"FRONT VIEW","VUE DE DESSUS":"TOP VIEW","VUE DE GAUCHE":"LEFT VIEW","Ép. 4":"Th. 4","Support moteur · PETG":"Motor bracket · PETG","c’est moi ↗":"that’s me ↗",
+"Indices de révision":"Revision history","Mon parcours, comme les révisions d’un plan : chaque indice est une version de moi un peu plus aboutie. Le trait se dessine au fil de la lecture.":"My career, like the revisions of a drawing: each index is a slightly more refined version of me. The line draws itself as you scroll.",
+"Secondaire technique":"Technical secondary school","Diplômé en usinage conventionnel.":"Diploma in conventional machining.","Tournage et fraisage.":"Turning and milling.","Lecture de plans et cotation.":"Drawing reading and dimensioning.",
+"Usineur CNC":"CNC Machinist","Production en série sur tours CNC Citizen.":"Series production on Citizen CNC lathes.","Changements d’outils pour la mise aux cotes et les cycles de production.":"Tool changes to hold dimensions and set up production cycles.","Rapports de contrôle des pièces.":"Part inspection reports.",
+"Régleur CNC":"CNC Setter","Mise en place complète des tours Citizen : montage, choix et réglage des outils.":"Full setup of Citizen lathes: tool selection, mounting and length setting.","Prototypes et validation avant le lancement en production.":"Prototypes and sign-off before production launch.","Entretien des machines et gestion du stockeur d’outils.":"Machine maintenance and tool storage system management.",
+"Formation · Technifutur":"Training · Technifutur","SolidWorks : assemblage, mise en plan, tôlerie, mécano-soudé, RMS, cotation fonctionnelle.":"SolidWorks: assemblies, drawings, sheet metal, weldments, RMS, functional dimensioning.","Examen : dossier de fabrication complet d’un moteur Bristol.":"Final exam: complete manufacturing file for a Bristol engine.",
+"Dès maintenant":"Starting now","Mon prochain poste":"My next job","Armement · aéronautique":"Defence · aerospace","Recherché":"Wanted","CDI ou intérim, temps plein ou partiel.":"Permanent or temporary contract, full or part time.","60 km autour d’Aubel, ou en télétravail.":"Within 60 km of Aubel, or remote.","Disponible tout de suite.":"Available immediately.",
+"Détail B · O&D Impression 3D":"Detail B · O&D Impression 3D","En parallèle de mes emplois, j’ai cofondé en 2021 O&D Impression 3D, une société d’impression 3D industrielle. J’y suis dessinateur et responsable de projet.":"Alongside my jobs, I co-founded O&D Impression 3D in 2021, an industrial 3D printing company. I am its draftsman and project manager.",
+"Depuis 2021 · en parallèle":"Since 2021 · alongside","Couche":"Layer","Buse":"Nozzle","Plateau":"Bed","ans en impression 3D industrielle":"years in industrial 3D printing","clients au carnet":"clients","salons professionnels":"trade fairs",
+"01 · Mon rôle":"01 · My role","Gestion des demandes et de la relation client.":"Handling requests and client relations.","Devis établis selon le besoin et le projet.":"Quotes based on each need and project.","Dessins, nomenclatures et rapports de contrôle.":"Drawings, bills of materials and inspection reports.",
+"Une large gamme de plastiques techniques, choisis selon les propriétés demandées.":"A wide range of engineering plastics, chosen for the required properties.","03 · Secteurs clients":"03 · Client sectors","Bâtiment":"Construction","Défense":"Defence","Piscines":"Swimming pools","Parcs d’attraction":"Theme parks",
+"Salons · cotation en chaîne":"Trade fairs · chain dimensioning","2025 · Francfort":"2025 · Frankfurt","2026 · Bruxelles":"2026 · Brussels","2026 · Francfort":"2026 · Frankfurt",
+"Vues de détail":"Detail views","Trois réalisations, de la formation aux projets clients. Les modèles 3D tournent : faites-les glisser pour les regarder sous tous les angles.":"Three projects, from training to client work. The 3D models rotate: drag them to view them from every angle.",
+"course":"stroke","vilebrequin":"crankshaft","Fichier verrouillé":"File locked","Le fichier n’est pas encore disponible au format portfolio.":"The file is not yet available in portfolio format.","Disponible prochainement":"Coming soon",
+"Moteur Bristol":"Bristol engine","Dossier de fabrication d’un moteur fonctionnel":"Manufacturing file for a working engine","Mon examen de fin de formation : rendre le dossier complet pour fabriquer un moteur qui tourne vraiment.":"My final training exam: deliver the complete file to manufacture an engine that actually runs.",
+"Modélisation 3D d’environ 50 pièces, avec le choix des matières, puis des sous-assemblages et l’assemblage complet.":"3D modelling of about 50 parts with material selection, then sub-assemblies and the full assembly.","Plans de fabrication de chaque pièce, classés dans l’ordre logique de la production.":"Manufacturing drawings for every part, ordered by the logic of production.","Nomenclature complète, avec la recherche et le choix de la visserie et des quantités.":"Complete bill of materials, including research and selection of fasteners and quantities.",
+"pièces":"parts","Sous-assemblages":"Sub-assemblies","Assemblage complet":"Full assembly","✥ Faites tourner dans tous les sens · 360°":"✥ Rotate in every direction · 360°",
+"Wagon Loup-Garou":"Loup-Garou coaster car","Une réplique de wagon pour Walibi, en 400 exemplaires":"A coaster car replica for Walibi, 400 units","Chez O&D Impression 3D, le parc Walibi nous a commandé une réplique du wagon de l’attraction Loup-Garou.":"At O&D Impression 3D, the Walibi park ordered a replica of the Loup-Garou ride’s coaster car.",
+"Tout le design réalisé moi-même, à partir des photos de la cliente.":"I did the entire design myself, from the client’s photos.","Un prototype pour la présentation et la validation, puis le lancement en production.":"A prototype for presentation and approval, then the production launch.","200 wagons rouges et 200 bleus, collés sur leurs plaques numérotées, emballés et expédiés.":"200 red and 200 blue cars, glued onto their numbered plates, packed and shipped.",
+"couleurs":"colours","prototype validé":"approved prototype","Réplique d’entraînement":"Training replica","Défense · 02/2026":"Defence · 02/2026","Rétroconception d’une arme pour l’entraînement":"Reverse engineering a firearm for training",
+"Pour un client d’O&D Impression 3D, j’ai redessiné une arme complète à partir d’un scan 3D que j’ai réalisé sur une vraie arme.":"For an O&D Impression 3D client, I redesigned a complete firearm from a 3D scan I made of a real one.","Certaines parties rendues amovibles pour y intégrer des circuits électroniques et des ressorts.":"Some parts made removable to fit electronic circuits and springs.","Objectif : entraîner les muscles de la main, dans le cadre de l’entraînement des forces spéciales.":"Goal: train hand muscles as part of special forces training.","Fichier transmis au dessinateur du client pour la suite des travaux.":"File handed over to the client’s draftsman for further work.",
+"Scan 3D":"3D scan","Rétroconception":"Reverse engineering","h de modélisation":"h of modelling",
+"Nomenclature · vue éclatée":"Bill of materials · exploded view","Ce que j’apporte, rangé comme un ensemble mécanique. Chaque repère de la vue éclatée correspond à un groupe de compétences. Survolez une carte pour voir sa pièce.":"What I bring, laid out like a mechanical assembly. Each balloon in the exploded view matches a skill group. Hover over a card to see its part.",
+"Logiciels de dessin":"Design software","Diplômé (Technifutur, 2026) : assemblage, mise en plan, tôlerie, mécano-soudé, RMS, cotation fonctionnelle":"Certified (Technifutur, 2026): assemblies, drawings, sheet metal, weldments, RMS, functional dimensioning","Diplômé (Technifutur, 2026)":"Certified (Technifutur, 2026)","Formation en ligne (2025), très bon niveau en modélisation":"Online course (2025), very strong modelling skills","Nouveaux logiciels":"New software","Prêt à être formé : CATIA, Inventor, FAO…":"Ready to be trained: CATIA, Inventor, CAM…",
+"Atelier":"Workshop","Tours CNC Citizen":"Citizen CNC lathes","4 ans d’usinage et de réglage : Mustad, PJK Precision":"4 years of machining and setting: Mustad, PJK Precision","Usinage conventionnel":"Conventional machining","Diplômé en 2021":"Diploma in 2021","Programmation CNC":"CNC programming","Bases":"Basics","Métrologie":"Metrology",
+"Pied à coulisse, micromètre, comparateur, projecteur de profil, machine 3D Wenzel, colonne de mesure, calibres à filet, cales étalons":"Calipers, micrometers, dial indicators, profile projector, Wenzel CMM, height gauge, thread gauges, gauge blocks","Impression 3D industrielle":"Industrial 3D printing","Depuis 2021 chez O&D : FFF, SLA, SLS":"Since 2021 at O&D: FFF, SLA, SLS",
+"Gestion de projet":"Project management","Devis et relation client":"Quotes and client relations","Demandes, besoins, chiffrage":"Requests, needs, costing","Nomenclatures et contrôle":"BOMs and inspection","Nomenclatures et rapports de contrôle, au quotidien chez O&D":"Bills of materials and inspection reports, daily at O&D","Salons professionnels":"Trade fairs",
+"Qualités":"Strengths","Discipliné":"Disciplined","Plus de 260 jours d’affilée sur Duolingo pour progresser en anglais":"Over 260 days in a row on Duolingo to improve my English","Autodidacte":"Self-taught","J’ai créé ma société en apprenant tout par moi-même":"I built my company by learning everything on my own","Créatif":"Creative","Toujours une idée ou une solution à proposer face à un problème":"Always ready with an idea or a solution to a problem",
+"Langues":"Languages","Français":"French","Langue maternelle":"Native language","Anglais":"English","Bases, en cours d’apprentissage":"Basic, currently learning",
+"Mobilité et loisirs":"Mobility and hobbies","Permis B et A":"Car and motorcycle licence","Motorisé : voiture et moto":"Own car and motorcycle","Zone de travail":"Work area","60 km autour d’Aubel, ou en télétravail":"Within 60 km of Aubel, or remote","Loisirs":"Hobbies","Moto et tennis de table":"Motorcycling and table tennis",
+"Titre":"Title","Parlons de votre prochain plan.":"Let’s talk about your next drawing.","Je cherche un CDI ou un intérim de dessinateur industriel, à temps plein ou partiel, dans l’armement ou l’aéronautique. Disponible tout de suite, dans un rayon de 60 km autour d’Aubel ou en télétravail.":"I am looking for a permanent or temporary industrial draftsman position, full or part time, in defence or aerospace. Available immediately, within 60 km of Aubel or remote.",
+"Dessiné par":"Drawn by","Indice":"Revision","Copier":"Copy","Copié":"Copied","Téléphone":"Phone","Échelle":"Scale","Disponibilité":"Availability","Immédiate":"Immediate","Feuille":"Sheet","Planche de Donovan Waucomont · 2026":"Donovan Waucomont’s sheet · 2026","Retour en haut ↑":"Back to top ↑",
+"Plan en trois vues d’un support en équerre, avec ses cotes":"Three-view drawing of an angle bracket, with dimensions","Portrait de Donovan Waucomont":"Portrait of Donovan Waucomont","Animation : une roue dentée imprimée couche par couche":"Animation: a gear printed layer by layer","Croquis d’un moteur monocylindre":"Sketch of a single-cylinder engine","Modèle 3D du wagon Loup-Garou, à faire tourner":"Rotatable 3D model of the Loup-Garou coaster car","Les deux versions du wagon, bleue et orange, posées sur une rambarde du parc":"Both versions of the car, blue and orange, on a park railing","Le coffret Loup-Garou ouvert à côté du wagon et des certificats":"The open Loup-Garou box next to the car and certificates","Les coffrets bleu et rouge devant les montagnes russes":"The blue and red boxes in front of the roller coaster","Modèle 3D de la réplique, à faire tourner":"Rotatable 3D model of the replica","Rendu couleur du modèle 3D de la réplique":"Colour render of the replica’s 3D model","Rendu couleur du modèle 3D de la réplique, vu de l’autre côté":"Colour render of the replica’s 3D model, other side","Vue éclatée d’un arbre avec vis, rondelle, roulement, pignon, entretoise et écrou":"Exploded view of a shaft with screw, washer, bearing, gear, spacer and nut","Symbole de projection européenne":"First-angle projection symbol","Salons professionnels ":"Trade fairs"
+};
+var LANG='fr';
+const T=s=>LANG==='en'&&EN[s]?EN[s]:s;
+function applyLang(l){
+  LANG=l;document.documentElement.lang=l;
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+  while(n=w.nextNode()){if(n._fr===undefined){if(!/[A-Za-zÀ-ÿ]{2}/.test(n.nodeValue))continue;n._fr=n.nodeValue}const k=n._fr.trim();n.nodeValue=l==='en'&&EN[k]?n._fr.replace(k,EN[k]):n._fr}
+  document.querySelectorAll('[alt],[aria-label]').forEach(e=>{['alt','aria-label'].forEach(a=>{if(!e.hasAttribute(a))return;e._a=e._a||{};if(e._a[a]===undefined)e._a[a]=e.getAttribute(a);const v=e._a[a],m=v.match(/^niveau (\d) sur 5$/);e.setAttribute(a,l==='en'?(m?`level ${m[1]} of 5`:EN[v]||v):v)})});
+  document.title=l==='en'?'Donovan Waucomont, sheet no. 1':'Donovan Waucomont, planche n° 1';
+  document.querySelectorAll('.lng button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===l));
+  try{localStorage.setItem('lang',l)}catch(e){}
+}
+document.querySelectorAll('.lng button').forEach(b=>b.addEventListener('click',()=>applyLang(b.dataset.l)));
+(function(){let l=null;try{l=localStorage.getItem('lang')}catch(e){}if(location.hash==='#en')l='en';if(location.hash==='#fr')l='fr';if(!l)l=(navigator.language||'fr').toLowerCase().startsWith('fr')?'fr':'en';if(l==='en')applyLang('en')})();
 </script>
 
 </body>
